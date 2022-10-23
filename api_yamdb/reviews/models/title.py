@@ -8,20 +8,50 @@ class Title(models.Model):
     year = models.IntegerField()
     rating = models.IntegerField()
     description = models.CharField(max_length=200)
-    genre = models.ForeignKey(
+    genre = models.ManyToManyField(
         Genre,
-        on_delete=models.SET_NULL,
+        through='TitleGenre',
+        through_fields=('title', 'genre'),
         related_name='titles',
         blank=True,
-        null=True
     )
-    category = models.ForeignKey(
+    category = models.ManyToManyField(
         Category,
-        on_delete=models.SET_NULL,
+        through='TitleCategory',
+        through_fields=('title', 'category'),
         related_name='titles',
         blank=True,
-        null=True
     )
 
     def __str__(self):
         return self.name
+
+
+class TitleGenre(models.Model):
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+
+
+class TitleCategory(models.Model):
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
