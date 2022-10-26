@@ -1,0 +1,20 @@
+from django.core.management import BaseCommand
+
+from reviews.models import Category
+from ._load_data import _load_data
+
+
+def row_saver_func(row: dict) -> None:
+    obj = Category(**row)
+    obj.save()
+
+
+class Command(BaseCommand):
+    help = f'Loads data from category.csv'
+
+    def handle(self, *args, **options):
+        _load_data(
+            data_model=Category,
+            data_name='category',
+            row_saver_func=row_saver_func
+        )

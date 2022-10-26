@@ -6,7 +6,7 @@ from . import Category, Genre
 class Title(models.Model):
     name = models.CharField(max_length=200)
     year = models.IntegerField()
-    rating = models.IntegerField()
+    rating = models.IntegerField(blank=True, null=True)
     description = models.CharField(max_length=200)
     genre = models.ManyToManyField(
         Genre,
