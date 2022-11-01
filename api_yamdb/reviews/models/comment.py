@@ -1,11 +1,11 @@
 from django.db import models
 
-from . import User, review
+from . import User, Review
 
 
 class Comment(models.Model):
     review = models.ForeignKey(
-        review,
+        Review,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='отзыв'

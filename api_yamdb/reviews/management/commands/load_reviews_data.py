@@ -1,11 +1,21 @@
 from django.core.management import BaseCommand
+from django.shortcuts import get_object_or_404
 
-from reviews.models import Review
+from reviews.models import Review, User, Title
 from ._load_data import _load_data
 
 
 def row_saver_func(row: dict) -> None:
-    obj = Review(**row)
+    author_obj = get_object_or_404(User, pk=row['author'])
+    title_obj = get_object_or_404(Title, pk=row['title_id'])
+    obj = Review(
+        id=row['id'],
+        title=title_obj,
+        text=row['text'],
+        author=author_obj,
+        score=row['score'],
+        pub_date=row['pub_date']
+    )
     obj.save()
 
 
