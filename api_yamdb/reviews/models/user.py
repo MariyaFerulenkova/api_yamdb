@@ -21,6 +21,19 @@ class User(AbstractUser):
         'Биография',
         blank=True,
     )
+    email = models.EmailField(
+        'Электронный адрес',
+        blank=False,
+        unique=True
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('username', 'email'),
+                name='unique_user_username_email'
+            )
+        ]
 
     @property
     def is_user(self):
@@ -32,4 +45,10 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN
+        return any(
+            (
+                self.role == self.ADMIN,
+                self.is_superuser,
+                self.is_staff,
+            )
+        )
