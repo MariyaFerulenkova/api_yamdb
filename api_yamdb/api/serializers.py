@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+
 from reviews.models import Title, Category, Genre, Comment, User
 from rest_framework import serializers
 
@@ -69,7 +71,28 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = ('username', 'email')
         model = User
 
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise ValidationError(
+                'Нельзя использовать me в качестве имени пользователя'
+            )
+        return value
+
 
 class RecieveTokenSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(max_length=512)
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role',
+        )
+        model = User
