@@ -31,7 +31,7 @@ class User(AbstractUser):
         constraints = [
             models.UniqueConstraint(
                 fields=('username', 'email'),
-                name='unique_user_username_email'
+                name='unique_username_email'
             )
         ]
 
