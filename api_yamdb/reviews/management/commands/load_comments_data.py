@@ -18,12 +18,16 @@ def row_saver_func(row: dict) -> None:
     obj.save()
 
 
+def _load_comments_data():
+    _load_data(
+        data_model=Comment,
+        data_name='comments',
+        row_saver_func=row_saver_func
+    )
+
+
 class Command(BaseCommand):
     help = f'Loads data from comments.csv'
 
     def handle(self, *args, **options):
-        _load_data(
-            data_model=Comment,
-            data_name='comments',
-            row_saver_func=row_saver_func
-        )
+        _load_comments_data()

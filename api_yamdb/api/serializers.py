@@ -1,22 +1,9 @@
 from django.core.exceptions import ValidationError
-
-from reviews.models import Title, Category, Genre, Comment, User
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-
-class TitleSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category',
-        )
-        model = Title
+from reviews.models import Title, Category, Genre, Comment, User, TitleGenre
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -37,6 +24,65 @@ class GenreSerializer(serializers.ModelSerializer):
             'slug',
         )
         model = Genre
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
+    rating = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category',
+        )
+        model = Title
+
+    def create(self, validated_data):
+        category = self.initial_data.get('category')
+        category_obj = get_object_or_404(Category, slug=category)
+
+        title_obj = Title.objects.create(category=category_obj, **validated_data)
+
+        genres = self.initial_data.getlist('genre')
+        for genre in genres:
+            genre_obj = get_object_or_404(Genre, slug=genre)
+            title_genre_obj = TitleGenre(title=title_obj, genre=genre_obj)
+            title_genre_obj.save()
+
+        return title_obj
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.year = validated_data.get('year', instance.year)
+        instance.description = validated_data.get('description', instance.description)
+
+        if self.initial_data.get('category'):
+            category_obj = get_object_or_404(Category, slug=self.initial_data.get('category'))
+            instance.category = category_obj
+
+        if self.initial_data.getlist('genre'):
+            TitleGenre.objects.filter(title=instance).delete()
+
+            genres = self.initial_data.getlist('genre')
+            for genre in genres:
+                genre_obj = get_object_or_404(Genre, slug=genre)
+                title_genre_obj = TitleGenre(title=instance, genre=genre_obj)
+                title_genre_obj.save()
+
+        instance.save()
+
+        return instance
+
+    def get_rating(self, obj):
+        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
+        round_rating = round(rating, 0) if rating else None
+        return round_rating
 
 
 class ReviewSerializer(serializers.ModelSerializer):
