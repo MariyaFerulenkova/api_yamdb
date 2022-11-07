@@ -9,12 +9,16 @@ def row_saver_func(row: dict) -> None:
     obj.save()
 
 
+def _load_users_data():
+    _load_data(
+        data_model=User,
+        data_name='users',
+        row_saver_func=row_saver_func
+    )
+
+
 class Command(BaseCommand):
     help = f'Loads data from users.csv'
 
     def handle(self, *args, **options):
-        _load_data(
-            data_model=User,
-            data_name='users',
-            row_saver_func=row_saver_func
-        )
+        _load_users_data()

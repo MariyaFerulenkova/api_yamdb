@@ -15,12 +15,12 @@ class Title(models.Model):
         related_name='titles',
         blank=True,
     )
-    category = models.ManyToManyField(
+    category = models.ForeignKey(
         Category,
-        through='TitleCategory',
-        through_fields=('title', 'category'),
         related_name='titles',
+        on_delete=models.SET_NULL,
         blank=True,
+        null=True,
     )
 
     def __str__(self):
@@ -36,21 +36,6 @@ class TitleGenre(models.Model):
     )
     genre = models.ForeignKey(
         Genre,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
-
-
-class TitleCategory(models.Model):
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
-    category = models.ForeignKey(
-        Category,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,

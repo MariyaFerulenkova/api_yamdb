@@ -1,7 +1,9 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from django_filters import FilterSet, CharFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets, filters, mixins
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,26 +11,61 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Title, Category, Genre, Review, User
+from .permissions import (AdminModeratorAuthorPermission, AdminOnly, IsAdminUserOrReadOnly)
 from .serializers import (TitleSerializer, CategorySerializer,
                           GenreSerializer, SignupSerializer,
                           RecieveTokenSerializer, ReviewSerializer,
                           CommentSerializer, UserSerializer)
-from .permissions import (AdminModeratorAuthorPermission, AdminOnly)
+
+
+class CreateListDeleteViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
+
+
+class CategoryViewSet(CreateListDeleteViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    permission_classes = (IsAdminUserOrReadOnly,)
+
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class GenreViewSet(CreateListDeleteViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+    permission_classes = (IsAdminUserOrReadOnly,)
+
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleFilter(FilterSet):
+    category = CharFilter(field_name='category__slug')
+    genre = CharFilter(field_name='genre__slug')
+    name = CharFilter(lookup_expr='icontains')
+    class Meta:
+        model = Title
+        fields = ('category', 'genre', 'name', 'year')
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
+    permission_classes = (IsAdminUserOrReadOnly,)
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-
-
-class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
