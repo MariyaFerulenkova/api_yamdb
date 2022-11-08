@@ -2,8 +2,10 @@ from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import Title, Category, Genre, Comment, User, TitleGenre
+from reviews.models import (Category, Comment, Genre,
+                            Review, Title, TitleGenre, User)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -47,7 +49,10 @@ class TitleSerializer(serializers.ModelSerializer):
         category = self.initial_data.get('category')
         category_obj = get_object_or_404(Category, slug=category)
 
-        title_obj = Title.objects.create(category=category_obj, **validated_data)
+        title_obj = Title.objects.create(
+            category=category_obj,
+            **validated_data
+        )
 
         genres = self.initial_data.getlist('genre')
         for genre in genres:
@@ -60,10 +65,16 @@ class TitleSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
         instance.year = validated_data.get('year', instance.year)
-        instance.description = validated_data.get('description', instance.description)
+        instance.description = validated_data.get(
+            'description',
+            instance.description
+        )
 
         if self.initial_data.get('category'):
-            category_obj = get_object_or_404(Category, slug=self.initial_data.get('category'))
+            category_obj = get_object_or_404(
+                Category,
+                slug=self.initial_data.get('category')
+            )
             instance.category = category_obj
 
         if self.initial_data.getlist('genre'):
@@ -88,12 +99,42 @@ class TitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         slug_field='name',
-        read_only=True
+        read_only=True,
+        default=serializers.CurrentUserDefault()
     )
     author = serializers.SlugRelatedField(
         slug_field='username',
-        read_only=True
+        read_only=True,
+        default=serializers.CurrentUserDefault()
     )
+
+    class Meta:
+        fields = (
+            'id',
+            'title',
+            'text',
+            'author',
+            'score',
+            'pub_date',
+        )
+        model = Review
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('title', 'author')
+            )
+        ]
+
+    def validate(self, data):
+        request = self.context['request']
+        title_id = self.context['view'].kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if request.method == 'POST' and Review.objects.filter(
+                title=title,
+                author=request.user).exists():
+            raise ValidationError(
+                'Отзыв автора уже оставлен на данное произведение.')
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

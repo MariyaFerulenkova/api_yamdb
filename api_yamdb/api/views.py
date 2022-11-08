@@ -1,21 +1,23 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from django_filters import FilterSet, CharFilter
+from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, viewsets, filters, mixins
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Title, Category, Genre, Review, User
-from .permissions import (AdminModeratorAuthorPermission, AdminOnly, IsAdminUserOrReadOnly)
-from .serializers import (TitleSerializer, CategorySerializer,
-                          GenreSerializer, SignupSerializer,
-                          RecieveTokenSerializer, ReviewSerializer,
-                          CommentSerializer, UserSerializer)
+from reviews.models import Category, Genre, Review, Title, User
+
+from .permissions import (AdminModeratorAuthorPermission, AdminOnly,
+                          IsAdminUserOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, RecieveTokenSerializer,
+                          ReviewSerializer, SignupSerializer,
+                          TitleSerializer, UserSerializer)
 
 
 class CreateListDeleteViewSet(
@@ -53,6 +55,7 @@ class TitleFilter(FilterSet):
     category = CharFilter(field_name='category__slug')
     genre = CharFilter(field_name='genre__slug')
     name = CharFilter(lookup_expr='icontains')
+
     class Meta:
         model = Title
         fields = ('category', 'genre', 'name', 'year')
@@ -78,6 +81,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
             id=self.kwargs.get('title_id'))
         return title.reviews.all()
 
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
@@ -88,6 +95,15 @@ class CommentViewSet(viewsets.ModelViewSet):
             Review,
             id=self.kwargs.get('review_id'))
         return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'))
+        serializer.save(
+            author=self.request.user,
+            review=review
+        )
 
 
 class SignupView(APIView):
