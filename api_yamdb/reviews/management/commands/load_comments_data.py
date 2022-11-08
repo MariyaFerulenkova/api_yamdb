@@ -1,7 +1,8 @@
 from django.core.management import BaseCommand
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Comment, User, Review
+from reviews.models import Comment, Review, User
+
 from ._load_data import _load_data
 
 
@@ -27,7 +28,7 @@ def _load_comments_data():
 
 
 class Command(BaseCommand):
-    help = f'Loads data from comments.csv'
+    help = 'Loads data from comments.csv'
 
     def handle(self, *args, **options):
         _load_comments_data()

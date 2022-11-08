@@ -9,7 +9,7 @@ from .load_users_data import _load_users_data
 
 
 class Command(BaseCommand):
-    help = f'Loads all data from csv files in static/data'
+    help = 'Loads all data from csv files in static/data'
 
     def handle(self, *args, **options):
         _load_categories_data()

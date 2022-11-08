@@ -1,6 +1,7 @@
 from django.core.management import BaseCommand
 
 from reviews.models import User
+
 from ._load_data import _load_data
 
 
@@ -18,7 +19,7 @@ def _load_users_data():
 
 
 class Command(BaseCommand):
-    help = f'Loads data from users.csv'
+    help = 'Loads data from users.csv'
 
     def handle(self, *args, **options):
         _load_users_data()

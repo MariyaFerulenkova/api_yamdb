@@ -25,5 +25,7 @@ def _load_data(
     print(f'Loading {data_name} data')
 
     # Code to load the data into database
-    for row in DictReader(open(f'./static/data/{data_name}.csv', encoding='utf-8')):
+    for row in DictReader(
+        open(f'./static/data/{data_name}.csv', encoding='utf-8')
+    ):
         row_saver_func(row)

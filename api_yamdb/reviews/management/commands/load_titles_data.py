@@ -1,14 +1,20 @@
 from django.core.management import BaseCommand
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Title, Genre, Category, TitleGenre
+from reviews.models import Category, Genre, Title, TitleGenre
+
 from ._load_data import _load_data
 
 
 def title_row_saver_func(row: dict) -> None:
     category_obj = get_object_or_404(Category, pk=row['category'])
 
-    title_obj = Title(id=row['id'], name=row['name'], year=row['year'], category=category_obj)
+    title_obj = Title(
+        id=row['id'],
+        name=row['name'],
+        year=row['year'],
+        category=category_obj
+    )
     title_obj.save()
 
 
@@ -35,7 +41,7 @@ def _load_titles_data():
 
 
 class Command(BaseCommand):
-    help = f'Loads data from titles.csv and genre_title.csv'
+    help = 'Loads data from titles.csv and genre_title.csv'
 
     def handle(self, *args, **options):
         _load_titles_data()
