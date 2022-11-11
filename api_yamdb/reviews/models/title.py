@@ -4,39 +4,35 @@ from . import Category, Genre
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=200)
-    year = models.IntegerField()
-    rating = models.IntegerField(blank=True, null=True)
-    description = models.CharField(max_length=200)
+    name = models.CharField(
+        verbose_name='Name',
+        max_length=200
+    )
+    year = models.IntegerField(
+        verbose_name='Year',
+    )
+    description = models.CharField(
+        verbose_name='Description',
+        max_length=200
+    )
     genre = models.ManyToManyField(
         Genre,
-        through='TitleGenre',
-        through_fields=('title', 'genre'),
+        verbose_name='Genre',
         related_name='titles',
         blank=True,
     )
     category = models.ForeignKey(
         Category,
+        verbose_name='Category',
         related_name='titles',
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
     )
 
+    class Meta:
+        verbose_name = 'Title'
+        verbose_name_plural = 'Titles'
+
     def __str__(self):
         return self.name
-
-
-class TitleGenre(models.Model):
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
