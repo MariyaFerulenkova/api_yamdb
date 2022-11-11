@@ -23,8 +23,8 @@ class Review(models.Model):
     score = models.IntegerField(
         'оценка',
         validators=(
-            MinValueValidator(1),
-            MaxValueValidator(10)
+            MinValueValidator(1, message='Оценка не может быть ниже 1'),
+            MaxValueValidator(10, message='Оценка не может быть выше 10')
         ),
         error_messages={'validators': 'Оценка от 1 до 10!'}
     )

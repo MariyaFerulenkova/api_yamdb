@@ -99,9 +99,8 @@ class SignupView(APIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if not User.objects.filter(username=request.user.username).exists():
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
         user = get_object_or_404(
             User,
@@ -152,10 +151,7 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def me(self, request):
-        user = get_object_or_404(
-            User,
-            username=self.request.user.username
-        )
+        user = request.user
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 user,

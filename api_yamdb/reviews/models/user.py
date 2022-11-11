@@ -15,7 +15,7 @@ class User(AbstractUser):
         'Роль',
         max_length=20,
         choices=ROLE_CHOICES,
-        default='user'
+        default=USER
     )
     bio = models.TextField(
         'Биография',
@@ -28,6 +28,8 @@ class User(AbstractUser):
     )
 
     class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         constraints = [
             models.UniqueConstraint(
                 fields=('username', 'email'),
