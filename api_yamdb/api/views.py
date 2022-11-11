@@ -1,9 +1,9 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -11,22 +11,15 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title, User
-
+from .mixins import CreateListDeleteViewSet
 from .permissions import (AdminModeratorAuthorPermission, AdminOnly,
                           IsAdminUserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RecieveTokenSerializer,
                           ReviewSerializer, SignupSerializer,
-                          TitleSerializer, UserSerializer)
-
-
-class CreateListDeleteViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    pass
+                          TitleSerializer, TitleCreateUpdateSerializer,
+                          UserSerializer)
+from .filters import TitleFilter
 
 
 class CategoryViewSet(CreateListDeleteViewSet):
@@ -51,19 +44,14 @@ class GenreViewSet(CreateListDeleteViewSet):
     lookup_field = 'slug'
 
 
-class TitleFilter(FilterSet):
-    category = CharFilter(field_name='category__slug')
-    genre = CharFilter(field_name='genre__slug')
-    name = CharFilter(lookup_expr='icontains')
-
-    class Meta:
-        model = Title
-        fields = ('category', 'genre', 'name', 'year')
-
-
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'partial_update'):
+            return TitleCreateUpdateSerializer
+        return TitleSerializer
 
     permission_classes = (IsAdminUserOrReadOnly,)
 

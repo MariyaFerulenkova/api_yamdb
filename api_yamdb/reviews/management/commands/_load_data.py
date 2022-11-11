@@ -16,7 +16,7 @@ def _load_data(
         row_saver_func: Callable
 ) -> None:
     # Show this if the data already exist in the database
-    if data_model.objects.exists():
+    if data_model and data_model.objects.exists():
         print(f'{data_name} data already loaded...exiting.')
         print(ALREADY_LOADED_ERROR_MESSAGE.format(data_name))
         return

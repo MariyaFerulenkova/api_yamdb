@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Category, Genre, Title, TitleGenre
+from reviews.models import Category, Genre, Title
 
 from ._load_data import _load_data
 
@@ -22,8 +22,7 @@ def genre_title_row_saver_func(row: dict) -> None:
     title_obj = get_object_or_404(Title, pk=row['title_id'])
     genre_obj = get_object_or_404(Genre, pk=row['genre_id'])
 
-    title_genre_obj = TitleGenre(title=title_obj, genre=genre_obj)
-    title_genre_obj.save()
+    title_obj.genre.add(genre_obj)
 
 
 def _load_titles_data():
@@ -34,7 +33,7 @@ def _load_titles_data():
     )
 
     _load_data(
-        data_model=TitleGenre,
+        data_model=None,
         data_name='genre_title',
         row_saver_func=genre_title_row_saver_func
     )

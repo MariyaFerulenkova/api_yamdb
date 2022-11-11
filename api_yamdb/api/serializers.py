@@ -1,31 +1,27 @@
+import datetime
+
 from django.core.exceptions import ValidationError
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.relations import SlugRelatedField
 
 from reviews.models import (Category, Comment, Genre,
-                            Review, Title, TitleGenre, User)
+                            Review, Title, User)
 
 
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = (
-            'name',
-            'slug',
-        )
         model = Category
+        exclude = ('id',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = (
-            'name',
-            'slug',
-        )
         model = Genre
+        exclude = ('id',)
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -34,6 +30,7 @@ class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
 
     class Meta:
+        model = Title
         fields = (
             'id',
             'name',
@@ -43,57 +40,39 @@ class TitleSerializer(serializers.ModelSerializer):
             'genre',
             'category',
         )
-        model = Title
-
-    def create(self, validated_data):
-        category = self.initial_data.get('category')
-        category_obj = get_object_or_404(Category, slug=category)
-
-        title_obj = Title.objects.create(
-            category=category_obj,
-            **validated_data
-        )
-
-        genres = self.initial_data.getlist('genre')
-        for genre in genres:
-            genre_obj = get_object_or_404(Genre, slug=genre)
-            title_genre_obj = TitleGenre(title=title_obj, genre=genre_obj)
-            title_genre_obj.save()
-
-        return title_obj
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.year = validated_data.get('year', instance.year)
-        instance.description = validated_data.get(
-            'description',
-            instance.description
-        )
-
-        if self.initial_data.get('category'):
-            category_obj = get_object_or_404(
-                Category,
-                slug=self.initial_data.get('category')
-            )
-            instance.category = category_obj
-
-        if self.initial_data.getlist('genre'):
-            TitleGenre.objects.filter(title=instance).delete()
-
-            genres = self.initial_data.getlist('genre')
-            for genre in genres:
-                genre_obj = get_object_or_404(Genre, slug=genre)
-                title_genre_obj = TitleGenre(title=instance, genre=genre_obj)
-                title_genre_obj.save()
-
-        instance.save()
-
-        return instance
 
     def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
-        round_rating = round(rating, 0) if rating else None
-        return round_rating
+        return round(obj.rating, 0) if obj.rating else None
+
+
+class TitleCreateUpdateSerializer(serializers.ModelSerializer):
+    genre = SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True,
+    )
+    category = SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+    )
+
+    def validate_year(self, value):
+        if value > datetime.datetime.now().year:
+            raise serializers.ValidationError(
+                'Нельзя добавлять произведения, которые еще не вышли'
+            )
+        return value
+
+    class Meta:
+        model = Title
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
