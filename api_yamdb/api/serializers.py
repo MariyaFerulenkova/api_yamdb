@@ -1,13 +1,10 @@
-import datetime
-
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import (Category, Comment, Genre,
-                            Review, Title, User)
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,7 +24,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField()
 
     class Meta:
         model = Title
@@ -41,9 +38,6 @@ class TitleSerializer(serializers.ModelSerializer):
             'category',
         )
 
-    def get_rating(self, obj):
-        return round(obj.rating, 0) if obj.rating else None
-
 
 class TitleCreateUpdateSerializer(serializers.ModelSerializer):
     genre = SlugRelatedField(
@@ -55,13 +49,6 @@ class TitleCreateUpdateSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         slug_field='slug',
     )
-
-    def validate_year(self, value):
-        if value > datetime.datetime.now().year:
-            raise serializers.ValidationError(
-                'Нельзя добавлять произведения, которые еще не вышли'
-            )
-        return value
 
     class Meta:
         model = Title

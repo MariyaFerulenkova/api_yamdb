@@ -1,6 +1,7 @@
 from django.db import models
 
 from . import Category, Genre
+from .validators import validate_year
 
 
 class Title(models.Model):
@@ -10,6 +11,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         verbose_name='Year',
+        validators=(validate_year,)
     )
     description = models.CharField(
         verbose_name='Description',
