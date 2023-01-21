@@ -38,7 +38,7 @@ python manage.py runserver
 - Django 2.2.16
 - Djangorestframework 3.12.4
 - Djangorestframework-simplejwt 4.7.2
-- Djangj-filter 2.4.0
+- Djangо-filter 2.4.0
 
 ### Авторы
 Студенты ЯндексПрактикум: Максим Неруш, Виталий Жуков, Мария Феруленкова
